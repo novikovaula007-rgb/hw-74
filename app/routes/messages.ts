@@ -22,6 +22,23 @@ messagesRouter.post('/', async (req: Request, res: Response) => {
     } else {
         return res.status(400).send('All fields must be filled in');
     }
+});
+
+messagesRouter.get('/', async (req: Request, res: Response) => {
+    try {
+        const files = await fs.readdir('./messages');
+        const lastFiles = files.sort().reverse().slice(0, 5);
+
+        const messagesPromises: Promise<IMessage>[] = lastFiles.map(async (file) => {
+            const messageData = await fs.readFile(`./messages/${file}`);
+            return JSON.parse(messageData.toString());
+        });
+
+        const messages = await Promise.all(messagesPromises);
+        return res.send(messages);
+    } catch (e) {
+        return res.status(500).send('Error reading messages');
+    }
 })
 
 export default messagesRouter;
